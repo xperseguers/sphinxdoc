@@ -48,6 +48,9 @@ server:
         - texlive-latex-extra
         - texlive-fonts-recommended
         - make
+        - python-docutils
+        - python-dev
+        - python-setuptools
     dot_files:
         -
             bash_aliases: null
@@ -79,6 +82,9 @@ php:
         display_errors: On
         error_reporting: '-1'
         session.save_path: /var/lib/php/session
+        upload_max_filesize: 50M
+        post_max_size: 50M
+        max_execution_time: 240
     timezone: Europe/Zurich
 xdebug:
     install: 0

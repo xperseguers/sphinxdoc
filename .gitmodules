@@ -1,0 +1,6 @@
+[submodule "vhost-share/typo3sphinx.dev/uploads/tx_sphinx/RestTools"]
+	path = vhost-share/typo3sphinx.dev/uploads/tx_sphinx/RestTools
+	url = git://git.typo3.org/Documentation/RestTools.git
+[submodule "vhost-share/TYPO3_master"]
+	path = vhost-share/TYPO3_master
+	url = git://git.typo3.org/Packages/TYPO3.CMS.git

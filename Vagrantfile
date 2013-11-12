@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "private_network", ip: "192.168.50.100"
 
 
-  config.vm.synced_folder "./", "/var/www", id: "vagrant-root", :nfs => false
+  config.vm.synced_folder "./vhost-share", "/var/www", id: "vagrant-root", :nfs => false, owner: "www-data", group: "www-data"
 
   config.vm.usable_port_range = (2200..2250)
   config.vm.provider :virtualbox do |virtualbox|
@@ -27,6 +27,7 @@ Vagrant.configure("2") do |config|
     puppet.options = ["--verbose", "--hiera_config /vagrant/hiera.yaml", "--parser future"]
   end
 
+  config.vm.provision :shell, :path => "shell/configure-sphinx.sh"
 
 
 

@@ -1,0 +1,14 @@
+.vagrant
+vhost-share/html
+vhost-share/typo3sphinx.dev/fileadmin
+vhost-share/typo3sphinx.dev/typo3conf
+vhost-share/typo3sphinx.dev/typo3temp
+vhost-share/typo3sphinx.dev/uploads/index.html
+vhost-share/typo3sphinx.dev/uploads/media
+vhost-share/typo3sphinx.dev/uploads/pics
+vhost-share/typo3sphinx.dev/uploads/tf
+vhost-share/typo3sphinx.dev/uploads/tx_sphinx/1.*
+vhost-share/typo3sphinx.dev/uploads/tx_sphinx/PyYAML
+vhost-share/typo3sphinx.dev/uploads/tx_sphinx/Pygments
+vhost-share/typo3sphinx.dev/uploads/tx_sphinx/sphinx-contrib
+

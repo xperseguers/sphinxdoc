@@ -246,7 +246,6 @@ define nginx_vhost (
   $fastcgi_param = concat(
   [
     'PATH_INFO $fastcgi_path_info',
-    'PATH_TRANSLATED $document_root$fastcgi_path_info',
     'SCRIPT_FILENAME $document_root$fastcgi_script_name',
   ], $envvars)
 
@@ -262,6 +261,7 @@ define nginx_vhost (
       'fastcgi_param'           => $fastcgi_param,
       'fastcgi_pass'            => $fastcgi_pass,
       'fastcgi_index'           => 'index.php',
+      'fastcgi_read_timeout'    => 240,
       'include'                 => 'fastcgi_params'
     },
     notify              => Class['nginx::service'],
