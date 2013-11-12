@@ -1,0 +1,104 @@
+---
+vagrantfile-local:
+    vm:
+        box: debian-wheezy72-x64-vbox43
+        box_url: 'https://puphpet.s3.amazonaws.com/debian-wheezy72-x64-vbox43.box'
+        hostname: null
+        network:
+            private_network: 192.168.50.100
+            forwarded_port: {  }
+        provider:
+            virtualbox:
+                modifyvm:
+                    name: sphinx-doc
+                    natdnshostresolver1: on
+                    memory: '512'
+                setextradata:
+                    VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root: 1
+        provision:
+            puppet:
+                manifests_path: puppet/manifests
+                options:
+                    - --verbose
+                    - '--hiera_config /vagrant/hiera.yaml'
+                    - '--parser future'
+        synced_folder:
+            4N1ocILWegEP:
+                id: vagrant-root
+                source: ./
+                target: /var/www
+                nfs: 'false'
+        usable_port_range: 2200..2250
+    ssh:
+        host: null
+        port: null
+        private_key_path: null
+        username: vagrant
+        guest_port: null
+        keep_alive: true
+        forward_agent: false
+        forward_x11: false
+        shell: 'bash -l'
+    vagrant:
+        host: ':detect'
+server:
+    packages:
+        - texlive-base
+        - texlive-latex-recommended
+        - texlive-latex-extra
+        - texlive-fonts-recommended
+        - make
+    dot_files:
+        -
+            bash_aliases: null
+    _prevent_empty: ''
+nginx:
+    vhosts:
+        ir0NVQO8VS2B:
+            server_name: typo3sphinx.dev
+            server_aliases:
+                - www.typo3sphinx.dev
+            www_root: /var/www/typo3sphinx.dev
+            listen_port: '80'
+            index_files:
+                - index.php
+            envvars:
+                - 'APP_ENV dev'
+php:
+    version: '55'
+    composer: '1'
+    modules:
+        php:
+            - cli
+            - intl
+            - mcrypt
+        pear: {  }
+        pecl:
+            - pecl_http
+    ini:
+        display_errors: On
+        error_reporting: '-1'
+        session.save_path: /var/lib/php/session
+    timezone: Europe/Zurich
+xdebug:
+    install: 0
+    settings:
+        xdebug.default_enable: '1'
+        xdebug.remote_autostart: '0'
+        xdebug.remote_connect_back: '1'
+        xdebug.remote_enable: '1'
+        xdebug.remote_handler: dbgp
+        xdebug.remote_port: '9000'
+mysql:
+    root_password: '123'
+    phpmyadmin: '1'
+    databases:
+        zDWUFbTYQ5hV:
+            grant:
+                - ALL
+            name: typo3sphinx
+            host: localhost
+            user: typo3sphinx
+            password: typo3sphinx
+            sql_file: ''
+
