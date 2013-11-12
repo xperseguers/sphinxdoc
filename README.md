@@ -11,7 +11,7 @@ This is a basic project to set up a TYPO3 website with Sphinx-Doc.
 
 Clone this repository locally:
 
-    $ git clone git@github.com:xperseguers/sphinxdoc.git
+    $ git clone https://github.com/xperseguers/sphinxdoc.git
     $ cd sphinxdoc
     $ vagrant up
 
