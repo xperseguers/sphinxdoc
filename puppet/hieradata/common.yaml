@@ -43,6 +43,8 @@ vagrantfile-local:
         host: ':detect'
 server:
     packages:
+        - imagemagick
+        - graphicsmagick
         - texlive-base
         - texlive-latex-recommended
         - texlive-latex-extra
