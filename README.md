@@ -37,7 +37,7 @@ and restdoc which are already available locally.
 * MySQL database: **typo3sphinx**
 * MySQL username/password: **typo3sphinx** / **typo3sphinx**
 
-phpMyAdmin is available on http://192.168.50.100/phpmyadmin/ (root / 123)
+phpMyAdmin is available on http://192.168.50.100/phpmyadmin/ (root / password)
 
 ### SSH
 

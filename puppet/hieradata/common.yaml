@@ -2,7 +2,7 @@
 vagrantfile-local:
     vm:
         box: debian-wheezy72-x64-vbox43
-        box_url: 'https://puphpet.s3.amazonaws.com/debian-wheezy72-x64-vbox43.box'
+        box_url: 'http://box.puphpet.com/debian-wheezy72-x64-vbox43.box'
         hostname: null
         network:
             private_network: 192.168.50.100
@@ -86,8 +86,12 @@ php:
         session.save_path: /var/lib/php/session
         upload_max_filesize: 50M
         post_max_size: 50M
-        max_execution_time: 240
+        max_execution_time: '240'
     timezone: Europe/Zurich
+drush:
+    install: 0
+    settings:
+        drush.tag_branch: 6.x
 xdebug:
     install: 0
     settings:
@@ -98,8 +102,9 @@ xdebug:
         xdebug.remote_handler: dbgp
         xdebug.remote_port: '9000'
 mysql:
-    root_password: '123'
+    root_password: 'password'
     phpmyadmin: '1'
+    adminer: 0
     databases:
         zDWUFbTYQ5hV:
             grant:

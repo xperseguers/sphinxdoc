@@ -246,6 +246,7 @@ define nginx_vhost (
   $fastcgi_param = concat(
   [
     'PATH_INFO $fastcgi_path_info',
+    'PATH_TRANSLATED $document_root$fastcgi_path_info',
     'SCRIPT_FILENAME $document_root$fastcgi_script_name',
   ], $envvars)
 
@@ -261,7 +262,6 @@ define nginx_vhost (
       'fastcgi_param'           => $fastcgi_param,
       'fastcgi_pass'            => $fastcgi_pass,
       'fastcgi_index'           => 'index.php',
-      'fastcgi_read_timeout'    => 240,
       'include'                 => 'fastcgi_params'
     },
     notify              => Class['nginx::service'],
@@ -320,7 +320,8 @@ if is_hash($apache_values) {
   include apache::params
 
   $php_webserver_service = 'httpd'
-  $php_webserver_user = $apache::params::user
+  $php_webserver_user    = $apache::params::user
+  $php_webserver_restart = true
 
   class { 'php':
     service => $php_webserver_service
@@ -329,7 +330,8 @@ if is_hash($apache_values) {
   include nginx::params
 
   $php_webserver_service = "${php_prefix}fpm"
-  $php_webserver_user = $nginx::params::nx_daemon_user
+  $php_webserver_user    = $nginx::params::nx_daemon_user
+  $php_webserver_restart = true
 
   class { 'php':
     package             => $php_webserver_service,
@@ -345,6 +347,15 @@ if is_hash($apache_values) {
     hasstatus  => true,
     require    => Package[$php_webserver_service]
   }
+} else {
+  $php_webserver_service = undef
+  $php_webserver_restart = false
+
+  class { 'php':
+    package             => "${php_prefix}cli",
+    service             => $php_webserver_service,
+    service_autorestart => false,
+  }
 }
 
 class { 'php::devel': }
@@ -359,12 +370,23 @@ if count($php_values['modules']['pecl']) > 0 {
   php_pecl_mod { $php_values['modules']['pecl']:; }
 }
 if count($php_values['ini']) > 0 {
-  $php_values['ini'].each { |$key, $value|
-    puphpet::ini { $key:
-      entry       => "CUSTOM/${key}",
-      value       => $value,
-      php_version => $php_values['version'],
-      webserver   => $php_webserver_service
+  each( $php_values['ini'] ) |$key, $value| {
+    if is_array($value) {
+      each( $php_values['ini'][$key] ) |$innerkey, $innervalue| {
+        puphpet::ini { "${key}_${innerkey}":
+          entry       => "CUSTOM_${innerkey}/${key}",
+          value       => $innervalue,
+          php_version => $php_values['version'],
+          webserver   => $php_webserver_service
+        }
+      }
+    } else {
+      puphpet::ini { $key:
+        entry       => "CUSTOM/${key}",
+        value       => $value,
+        php_version => $php_values['version'],
+        webserver   => $php_webserver_service
+      }
     }
   }
 
@@ -390,13 +412,21 @@ puphpet::ini { $key:
 }
 
 define php_mod {
-  php::module { $name: }
+  php::module { $name:
+    service_autorestart => $php_webserver_restart,
+  }
 }
 define php_pear_mod {
-  php::pear::module { $name: use_package => false }
+  php::pear::module { $name:
+    use_package         => false,
+    service_autorestart => $php_webserver_restart,
+  }
 }
 define php_pecl_mod {
-  php::pecl::module { $name: use_package => false }
+  php::pecl::module { $name:
+    use_package         => false,
+    service_autorestart => $php_webserver_restart,
+  }
 }
 
 if $php_values['composer'] == 1 {
@@ -411,6 +441,32 @@ if $php_values['composer'] == 1 {
     suhosin_enabled => false,
   }
 }
+
+## Begin Drush manifest
+
+if $drush_values == undef {
+  $drush_values = hiera('drush', false)
+}
+
+if $drush_values['install'] != undef and $drush_values['install'] == 1 {
+  if ($drush_values['settings']['drush.tag_branch'] != undef) {
+    $drush_tag_branch = $drush_values['settings']['drush.tag_branch']
+  } else {
+    $drush_tag_branch = ''
+  }
+
+  ## @see https://drupal.org/node/2165015
+  include drush::git::drush
+
+  ## class { 'drush::git::drush':
+  ##   git_branch => $drush_tag_branch,
+  ##   update     => true,
+  ## }
+}
+
+## End Drush manifest
+
+## Begin Xdebug manifest
 
 if $xdebug_values == undef {
   $xdebug_values = hiera('xdebug', false)
@@ -430,7 +486,7 @@ if $xdebug_values['install'] != undef and $xdebug_values['install'] == 1 {
   }
 
   if is_hash($xdebug_values['settings']) and count($xdebug_values['settings']) > 0 {
-    $xdebug_values['settings'].each { |$key, $value|
+    each( $xdebug_values['settings'] ) |$key, $value| {
       puphpet::ini { $key:
         entry       => "XDEBUG/${key}",
         value       => $value,
@@ -459,6 +515,12 @@ if $nginx_values == undef {
   $nginx_values = hiera('nginx', false)
 }
 
+if is_hash($apache_values) or is_hash($nginx_values) {
+  $mysql_webserver_restart = true
+} else {
+  $mysql_webserver_restart = false
+}
+
 if $mysql_values['root_password'] {
   class { 'mysql::server':
     root_password => $mysql_values['root_password'],
@@ -470,9 +532,13 @@ if $mysql_values['root_password'] {
 
   if is_hash($php_values) {
     if $::osfamily == 'redhat' and $php_values['version'] == '53' and ! defined(Php::Module['mysql']) {
-      php::module { 'mysql': }
+      php::module { 'mysql':
+        service_autorestart => $mysql_webserver_restart,
+      }
     } elsif ! defined(Php::Module['mysqlnd']) {
-      php::module { 'mysqlnd': }
+      php::module { 'mysqlnd':
+        service_autorestart => $mysql_webserver_restart,
+      }
     }
   }
 }
@@ -558,6 +624,21 @@ define mysql_nginx_default_conf (
   class { 'puphpet::nginx':
     fastcgi_pass => $fastcgi_pass,
     notify       => Class['nginx::service'],
+  }
+}
+
+if has_key($mysql_values, 'adminer') and $mysql_values['adminer'] == 1 and is_hash($php_values) {
+  if is_hash($apache_values) {
+    $mysql_adminer_webroot_location = $puphpet::params::apache_webroot_location
+  } elsif is_hash($nginx_values) {
+    $mysql_adminer_webroot_location = $puphpet::params::nginx_webroot_location
+  } else {
+    $mysql_adminer_webroot_location = $puphpet::params::apache_webroot_location
+  }
+
+  class { 'puphpet::adminer':
+    location => "${mysql_adminer_webroot_location}/adminer",
+    owner    => 'www-data'
   }
 }
 
