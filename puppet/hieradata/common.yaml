@@ -49,6 +49,7 @@ server:
         - texlive-latex-recommended
         - texlive-latex-extra
         - texlive-fonts-recommended
+        - texlive-fonts-extra
         - make
         - python-docutils
         - python-dev
